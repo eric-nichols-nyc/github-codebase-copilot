@@ -76,7 +76,9 @@ function tryMapUserRepoRow(row: unknown): GithubRepoListItem | null {
  * Maps GitHub `GET /user/repos` JSON (array of repo objects) into list items.
  * @throws If the payload is not a JSON array (e.g. rate-limit error object).
  */
-export function mapGitHubUserReposResponse(data: unknown): GithubRepoListItem[] {
+export function mapGitHubUserReposResponse(
+  data: unknown
+): GithubRepoListItem[] {
   if (!Array.isArray(data)) {
     throw new Error(nonArrayGitHubErrorMessage(data));
   }
@@ -273,4 +275,42 @@ export function extractTechStack(pkg: PackageJsonDeps | null | undefined) {
   };
 
   return Object.keys(deps);
+}
+
+export type RepoTreeEntry = {
+  path: string;
+  type: string;
+  size?: number;
+};
+
+export async function getRepoTree(
+  owner: string,
+  repo: string,
+  branch = "main"
+): Promise<RepoTreeEntry[] | null> {
+  const res = await fetch(
+    `${GITHUB_API}/repos/${owner}/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
+    {
+      headers: githubApiHeaders(),
+      cache: "no-store",
+    }
+  );
+
+  if (!res.ok) {
+    return null;
+  }
+
+  const data = (await res.json()) as {
+    tree?: Array<{ path?: string; type?: string; size?: number }>;
+  };
+
+  if (!Array.isArray(data.tree)) {
+    return null;
+  }
+
+  return data.tree.map((item) => ({
+    path: item.path ?? "",
+    type: item.type ?? "",
+    ...(typeof item.size === "number" ? { size: item.size } : {}),
+  }));
 }

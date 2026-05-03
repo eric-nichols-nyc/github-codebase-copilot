@@ -8,6 +8,7 @@ import {
 } from "@repo/design-system/components/ui/tabs";
 import type { ProjectSelectRow } from "@/lib/db/schema";
 import { RepoArchitectureNotes } from "./repo-detail/architecture-notes";
+import { RepoDetailFiles } from "./repo-detail/files";
 import { RepoDetailHeader } from "./repo-detail/header";
 import { RepoInterviewTalkingPoints } from "./repo-detail/interview-talking-points";
 import { RepoDetailMetadata } from "./repo-detail/metadata";
@@ -46,6 +47,12 @@ export function RepoDetail({ project }: RepoDetailProps) {
             </TabsTrigger>
             <TabsTrigger
               className={repoDetailTabTriggerClassName}
+              value="files"
+            >
+              Files
+            </TabsTrigger>
+            <TabsTrigger
+              className={repoDetailTabTriggerClassName}
               value="architecture"
             >
               Architecture
@@ -76,6 +83,12 @@ export function RepoDetail({ project }: RepoDetailProps) {
           value="readme"
         >
           <RepoReadmeViewer project={project} />
+        </TabsContent>
+        <TabsContent
+          className="min-h-0 flex-1 overflow-y-auto focus-visible:outline-none"
+          value="files"
+        >
+          <RepoDetailFiles project={project} />
         </TabsContent>
         <TabsContent
           className="min-h-0 flex-1 overflow-y-auto focus-visible:outline-none"

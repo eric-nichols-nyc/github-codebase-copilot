@@ -26,6 +26,13 @@ export type ProjectBranchesJson = unknown;
 /** Snapshot of GitHub repo fields returned by our importer (stored for debugging / re-sync). */
 export type ProjectGithubRawJson = Record<string, unknown>;
 
+/** Simplified git tree entries (files only) after import filters; see `simplifyTree`. */
+export type ProjectRepoTreeJson = Array<{
+  path: string;
+  type: string;
+  size?: number;
+}>;
+
 export const projects = pgTable(
   "projects",
   {
@@ -41,6 +48,7 @@ export const projects = pgTable(
     homepageUrl: text("homepage_url"),
     languages: jsonb("languages").$type<ProjectLanguagesJson | null>(),
     branches: jsonb("branches").$type<ProjectBranchesJson | null>(),
+    repoTree: jsonb("repo_tree").$type<ProjectRepoTreeJson | null>(),
     lastGithubUpdatedAt: timestamp("last_github_updated_at", {
       withTimezone: true,
     }),

@@ -8,7 +8,9 @@ import {
   getPackageJson,
   getReadme,
   getRepo,
+  getRepoTree,
 } from "./github-client";
+import { simplifyTree } from "./repo-tree";
 
 export async function importProject(owner: string, repo: string) {
   const [repoData, readme, languages, branches, packageJson] =
@@ -19,6 +21,13 @@ export async function importProject(owner: string, repo: string) {
       getBranches(owner, repo),
       getPackageJson(owner, repo).catch(() => null),
     ]);
+
+  const rawTree = await getRepoTree(
+    owner,
+    repo,
+    repoData.default_branch ?? "main"
+  );
+  const repoTree = simplifyTree(rawTree);
 
   return {
     githubOwner: owner,
@@ -33,6 +42,7 @@ export async function importProject(owner: string, repo: string) {
     languages,
     branches,
     packageJson,
+    repoTree,
 
     lastGithubUpdatedAt: repoData.updated_at
       ? new Date(repoData.updated_at)

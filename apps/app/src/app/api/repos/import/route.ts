@@ -4,12 +4,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
-import {
-  getBranches,
-  getLanguages,
-  getReadme,
-  getRepo,
-} from "@/src/features/projects/lib/github-client";
+import { importProject } from "@/src/features/projects/lib/project-importer";
 import {
   type ImportRepoRequestBody,
   resolveImportRepoBody,
@@ -32,33 +27,26 @@ export async function POST(req: Request) {
 
     const { githubOwner, githubRepo } = parsed;
 
-    const [repoData, readme, languages, branches] = await Promise.all([
-      getRepo(githubOwner, githubRepo),
-      getReadme(githubOwner, githubRepo),
-      getLanguages(githubOwner, githubRepo),
-      getBranches(githubOwner, githubRepo),
-    ]);
-
+    const payload = await importProject(githubOwner, githubRepo);
     const now = new Date();
 
     const [project] = await db
       .insert(projects)
       .values({
-        githubOwner,
-        githubRepo,
+        githubOwner: payload.githubOwner,
+        githubRepo: payload.githubRepo,
 
-        name: repoData.name,
-        description: repoData.description,
-        readme,
-        repoUrl: repoData.html_url,
-        homepageUrl: repoData.homepage,
-        languages,
-        branches,
-        lastGithubUpdatedAt: repoData.updated_at
-          ? new Date(repoData.updated_at)
-          : null,
+        name: payload.name,
+        description: payload.description,
+        readme: payload.readme,
+        repoUrl: payload.repoUrl,
+        homepageUrl: payload.homepageUrl,
+        languages: payload.languages,
+        branches: payload.branches,
+        repoTree: payload.repoTree,
+        lastGithubUpdatedAt: payload.lastGithubUpdatedAt,
         lastSyncedAt: now,
-        githubRaw: repoData,
+        githubRaw: payload.githubRaw,
 
         createdAt: now,
         updatedAt: now,
@@ -66,18 +54,17 @@ export async function POST(req: Request) {
       .onConflictDoUpdate({
         target: [projects.githubOwner, projects.githubRepo],
         set: {
-          name: repoData.name,
-          description: repoData.description,
-          readme,
-          repoUrl: repoData.html_url,
-          homepageUrl: repoData.homepage,
-          languages,
-          branches,
-          lastGithubUpdatedAt: repoData.updated_at
-            ? new Date(repoData.updated_at)
-            : null,
+          name: payload.name,
+          description: payload.description,
+          readme: payload.readme,
+          repoUrl: payload.repoUrl,
+          homepageUrl: payload.homepageUrl,
+          languages: payload.languages,
+          branches: payload.branches,
+          repoTree: payload.repoTree,
+          lastGithubUpdatedAt: payload.lastGithubUpdatedAt,
           lastSyncedAt: now,
-          githubRaw: repoData,
+          githubRaw: payload.githubRaw,
           updatedAt: now,
         },
       })
