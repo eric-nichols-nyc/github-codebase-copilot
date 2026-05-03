@@ -1,4 +1,5 @@
 import { ModeToggle } from "@repo/design-system/components/mode-toggle";
+import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
   CardContent,
@@ -6,31 +7,32 @@ import {
   CardHeader,
   CardTitle,
 } from "@repo/design-system/components/ui/card";
-import { Database } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 const HomePage = () => (
-  <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8">
-    <Card className="w-full max-w-lg">
+  <main className="flex min-h-screen items-center justify-center bg-background p-8">
+    <Card className="relative w-full max-w-md">
       <CardHeader className="text-center">
+        <div className="absolute top-4 right-4">
+          <ModeToggle />
+        </div>
         <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-          <Database className="h-6 w-6 text-primary" />
+          <Sparkles className="h-6 w-6 text-primary" />
         </div>
         <CardTitle className="text-2xl">App</CardTitle>
         <CardDescription>
-          Drizzle ORM and Neon serverless, with the shared design system.
+          Next.js app wired to the shared design system
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="flex flex-col gap-4">
         <p className="text-center text-muted-foreground text-sm">
-          Set <code className="font-mono text-xs">DATABASE_URL</code> in{" "}
-          <code className="font-mono text-xs">.env.local</code>, then run{" "}
-          <code className="font-mono text-xs">pnpm db:push</code> from this app.
-          Use <code className="font-mono text-xs">getDb()</code> from{" "}
-          <code className="font-mono text-xs">@/lib/db</code> on the server.
+          Theme, typography, and components come from{" "}
+          <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">
+            @repo/design-system
+          </code>
+          .
         </p>
-        <div className="flex justify-center">
-          <ModeToggle />
-        </div>
+        <Button className="w-full">Continue</Button>
       </CardContent>
     </Card>
   </main>

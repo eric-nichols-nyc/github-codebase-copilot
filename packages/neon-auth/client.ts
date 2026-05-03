@@ -1,7 +1,7 @@
 "use client";
 
-import { createAuthClient } from "@neondatabase/neon-js/auth/next";
+import { createAuthClient } from "@neondatabase/auth/next";
 
-export const createNeonAuthClient = () => createAuthClient();
-
-export type NeonAuthClient = ReturnType<typeof createNeonAuthClient>;
+export function createNeonAuthClient() {
+  return createAuthClient();
+}
