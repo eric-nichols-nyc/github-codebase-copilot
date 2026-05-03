@@ -7,7 +7,8 @@ This describes how a **GitHub repository becomes a `projects` row** in `apps/app
 
 ## Entry point
 
-- **HTTP:** `POST /api/projects/import` — handler in `apps/app/src/app/api/projects/import/route.ts`.
+- **HTTP:** `POST /api/repos/import` — handler in `apps/app/src/app/api/repos/import/route.ts`.
+- **HTTP:** `GET /api/repos/github` — lists repositories for the import picker (`listGitHubUserRepos` in `github-client`), up to 100 recently updated.
 - **Body:** JSON with `repoInput` (string). Examples: `vercel/next.js`, `https://github.com/vercel/next.js/`.
 
 The route is the orchestrator today: it calls `github-client` helpers and Drizzle directly. There is also `importProject()` in `apps/app/src/features/projects/lib/project-importer.ts`, which fetches an extra **`package.json`** via `getPackageJson`; wire that into the API when you want the same shape everywhere.
@@ -54,7 +55,8 @@ Schema lives in `apps/app/lib/db/schema.ts` (`projects` table). If the database 
 
 | Area | Path |
 | --- | --- |
-| API route | `apps/app/src/app/api/projects/import/route.ts` |
+| Import API | `apps/app/src/app/api/repos/import/route.ts` |
+| GitHub repo list (picker) | `apps/app/src/app/api/repos/github/route.ts` |
 | Shared import payload (includes `packageJson`) | `apps/app/src/features/projects/lib/project-importer.ts` |
 | GitHub HTTP client | `apps/app/src/features/projects/lib/github-client.ts` |
 | DB insert helpers (if used) | `apps/app/src/features/projects/lib/project-service.ts` |

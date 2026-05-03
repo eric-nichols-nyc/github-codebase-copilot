@@ -44,7 +44,3 @@ export async function createProjectFromGithub(data: any) {
 
   return project;
 }
-
-export function getProjects() {
-  return db.select().from(projects).orderBy(projects.createdAt);
-}

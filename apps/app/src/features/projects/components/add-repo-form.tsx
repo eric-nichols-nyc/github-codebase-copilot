@@ -39,7 +39,7 @@ async function loadGithubRepos(): Promise<
   { ok: true; repos: RepoOption[] } | { ok: false; error: string }
 > {
   try {
-    const res = await fetch("/api/github/repos");
+    const res = await fetch("/api/repos/github");
     const data = (await res.json()) as {
       repos?: RepoOption[];
       error?: string;

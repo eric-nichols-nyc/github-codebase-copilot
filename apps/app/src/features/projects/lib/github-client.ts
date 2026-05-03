@@ -9,6 +9,39 @@ function getHeaders() {
   };
 }
 
+export type GithubRepoListItem = {
+  fullName: string;
+  name: string;
+  private: boolean;
+};
+
+/** Repositories visible to `GITHUB_TOKEN` (up to 100, recently updated first). */
+export async function listGitHubUserRepos(): Promise<GithubRepoListItem[]> {
+  const res = await fetch(
+    `${GITHUB_API}/user/repos?per_page=100&sort=updated`,
+    { headers: getHeaders() }
+  );
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error("GitHub token missing or invalid");
+    }
+    throw new Error("Failed to list repositories");
+  }
+
+  const data = (await res.json()) as Array<{
+    full_name: string;
+    name: string;
+    private: boolean;
+  }>;
+
+  return data.map((r) => ({
+    fullName: r.full_name,
+    name: r.name,
+    private: r.private,
+  }));
+}
+
 export async function getRepo(owner: string, repo: string) {
   const res = await fetch(`${GITHUB_API}/repos/${owner}/${repo}`, {
     headers: getHeaders(),

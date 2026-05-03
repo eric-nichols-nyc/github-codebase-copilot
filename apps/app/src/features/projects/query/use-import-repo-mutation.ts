@@ -12,7 +12,7 @@ type ImportRepoResponse =
   | { error: string };
 
 async function importRepo(input: ImportRepoInput): Promise<ImportRepoResponse> {
-  const res = await fetch("/api/projects/import", {
+  const res = await fetch("/api/repos/import", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
