@@ -1,0 +1,63 @@
+---
+title: GitHub project import
+description: End-to-end flow from API request to Neon row for importing a GitHub repository as a project.
+---
+
+This describes how a **GitHub repository becomes a `projects` row** in `apps/app`: validation, GitHub API calls, and the database upsert.
+
+## Entry point
+
+- **HTTP:** `POST /api/projects/import` — handler in `apps/app/src/app/api/projects/import/route.ts`.
+- **Body:** JSON with `repoInput` (string). Examples: `vercel/next.js`, `https://github.com/vercel/next.js/`.
+
+The route is the orchestrator today: it calls `github-client` helpers and Drizzle directly. There is also `importProject()` in `apps/app/src/features/projects/lib/project-importer.ts`, which fetches an extra **`package.json`** via `getPackageJson`; wire that into the API when you want the same shape everywhere.
+
+## Step 1 — Validate and normalize `repoInput`
+
+1. Read `repoInput` from the JSON body.
+2. Reject if it does not contain `/` (not `owner/repo`).
+3. Normalize the string:
+   - `trim()`
+   - strip `https://github.com/` or `http://github.com/`
+   - strip a trailing `/`
+4. Split on the **first** path segment boundary: `split("/")` → `githubOwner`, `githubRepo` (assumes a single `/` between owner and repo name; unusual repo names with slashes are not handled here).
+
+## Step 2 — Fetch GitHub data (parallel)
+
+All of these use `GITHUB_TOKEN` (`Authorization: Bearer …`) where configured in `apps/app/src/features/projects/lib/github-client.ts`.
+
+| Step | Helper | GitHub API | Notes |
+| --- | --- | --- | --- |
+| Repo metadata | `getRepo` | `GET /repos/{owner}/{repo}` | 404 → “Repository not found”; builds a small snapshot (name, description, URLs, `updated_at`, counts, default branch). |
+| README | `getReadme` | `GET /repos/{owner}/{repo}/readme` | Non-OK → `null`; otherwise base64-decodes `content` to UTF-8 text. |
+| Languages | `getLanguages` | `GET /repos/{owner}/{repo}/languages` | Non-OK → `null`; otherwise raw JSON (bytes per language). |
+| Branches | `getBranches` | `GET /repos/{owner}/{repo}/branches` | Non-OK → `[]`; otherwise branch payload from the API. |
+
+These four run together with `Promise.all` so latency is roughly one round-trip wave, not four sequential calls.
+
+## Step 3 — Persist to Postgres (Drizzle)
+
+1. Build timestamps: `now` for sync/update fields; `lastGithubUpdatedAt` from `repoData.updated_at` when present.
+2. **`insert` into `projects`** with owner/repo, metadata, `readme`, `languages`, `branches`, `githubRaw` (the `getRepo` snapshot), URLs, sync timestamps, and `createdAt` / `updatedAt`.
+3. **`onConflictDoUpdate`** on the unique pair `(github_owner, github_repo)` so re-import **updates** the same row instead of failing.
+4. **`returning()`** — response body is the upserted project row as JSON.
+
+Schema lives in `apps/app/lib/db/schema.ts` (`projects` table). If the database is missing columns, apply your usual Drizzle workflow (`db:push` or migrations) so the live table matches the schema.
+
+## Failure modes (high level)
+
+- **400:** Bad `repoInput` (missing `/`).
+- **500:** Uncaught errors (GitHub failure, DB error, etc.); check server logs for the thrown error.
+- **GitHub:** `getRepo` throws on 404 or other failures; README/languages/branches degrade to empty / null where coded.
+
+## Related files
+
+| Area | Path |
+| --- | --- |
+| API route | `apps/app/src/app/api/projects/import/route.ts` |
+| Shared import payload (includes `packageJson`) | `apps/app/src/features/projects/lib/project-importer.ts` |
+| GitHub HTTP client | `apps/app/src/features/projects/lib/github-client.ts` |
+| DB insert helpers (if used) | `apps/app/src/features/projects/lib/project-service.ts` |
+| Table definition | `apps/app/lib/db/schema.ts` |
+
+When you change the flow, update this page so the steps stay accurate.

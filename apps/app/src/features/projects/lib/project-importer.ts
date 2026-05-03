@@ -1,3 +1,7 @@
+/**
+ * Builds the payload for a GitHub import (parallel fetches + optional package.json).
+ * For the HTTP/API and DB upsert sequence, see docs/content/docs/apps/project-import.mdx
+ */
 import {
   getBranches,
   getLanguages,

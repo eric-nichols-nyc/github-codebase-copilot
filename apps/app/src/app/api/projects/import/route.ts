@@ -1,4 +1,5 @@
 // src/app/api/projects/import/route.ts
+// Step-by-step import flow (GitHub → Neon): docs/content/docs/apps/project-import.mdx
 
 const TRAILING_SLASH = /\/$/;
 
