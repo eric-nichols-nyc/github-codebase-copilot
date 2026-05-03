@@ -74,3 +74,5 @@ export const projects = pgTable(
     ),
   ]
 );
+
+export type ProjectSelectRow = typeof projects.$inferSelect;

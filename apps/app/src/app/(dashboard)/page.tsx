@@ -2,19 +2,8 @@ import { asc } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
-import { FeaturesCard } from "@/src/features/projects/components/features-card";
-
-const leftRows = Array.from({ length: 36 }, (_, i) => ({
-  key: `left-row-${i + 1}`,
-  title: `Left item ${i + 1}`,
-  body: "Placeholder copy for the left column. Scroll only moves this side.",
-}));
-
-const rightRows = Array.from({ length: 28 }, (_, i) => ({
-  key: `right-row-${i + 1}`,
-  title: `Right block ${i + 1}`,
-  body: "Placeholder copy for the right column. Scroll only moves this side.",
-}));
+import { ProjectDetail } from "@/src/features/projects/components/project-detail";
+import { ProjectsList } from "@/src/features/projects/components/project-list";
 
 export default async function DashboardHomePage() {
   const projectRows = await db
@@ -22,25 +11,14 @@ export default async function DashboardHomePage() {
     .from(projects)
     .orderBy(asc(projects.githubOwner), asc(projects.githubRepo));
 
-  console.log("[dashboard home] projects from database:", projectRows);
-
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] min-h-0 w-full overflow-hidden">
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain border-r p-4">
-        <p className="mb-4 font-medium text-sm">Left panel</p>
-        <ul className="space-y-3">
-          {leftRows.map(({ key, title, body }) => (
-            <FeaturesCard key={key} body={body} title={title} />
-          ))}
-        </ul>
+        <p className="mb-4 font-medium text-sm">Projects</p>
+        <ProjectsList projects={projectRows} />
       </div>
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain p-4">
-        <p className="mb-4 font-medium text-sm">Right panel</p>
-        <ul className="space-y-3">
-          {rightRows.map(({ key, title, body }) => (
-            <FeaturesCard key={key} body={body} title={title} />
-          ))}
-        </ul>
+        <ProjectDetail />
       </div>
     </div>
   );

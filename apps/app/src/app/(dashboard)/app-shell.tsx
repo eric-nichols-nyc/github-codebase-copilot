@@ -11,15 +11,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <DashboardLayout
       header={
-        <>
-          <SidebarTrigger />
-          <span className="truncate text-muted-foreground text-sm">
-            Dashboard
-          </span>
-          <div className="ml-auto flex shrink-0 items-center">
+        <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-2">
+          <div className="flex min-w-0 items-center gap-2">
+            <SidebarTrigger />
+            <span className="truncate text-muted-foreground text-sm">
+              Dashboard
+            </span>
+          </div>
+          <div className="flex shrink-0 justify-center">
             <AddRepoDialog />
           </div>
-        </>
+          <div className="min-w-0" />
+        </div>
       }
       sidebar={<AppSidebar />}
     >
