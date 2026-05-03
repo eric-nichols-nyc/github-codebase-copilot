@@ -1,3 +1,8 @@
+import { asc } from "drizzle-orm";
+
+import { db } from "@/lib/db";
+import { projects } from "@/lib/db/schema";
+
 const leftRows = Array.from({ length: 36 }, (_, i) => ({
   key: `left-row-${i + 1}`,
   title: `Left item ${i + 1}`,
@@ -10,7 +15,14 @@ const rightRows = Array.from({ length: 28 }, (_, i) => ({
   body: "Placeholder copy for the right column. Scroll only moves this side.",
 }));
 
-export default function DashboardHomePage() {
+export default async function DashboardHomePage() {
+  const projectRows = await db
+    .select()
+    .from(projects)
+    .orderBy(asc(projects.githubOwner), asc(projects.githubRepo));
+
+  console.log("[dashboard home] projects from database:", projectRows);
+
   return (
     <div className="flex h-[calc(100dvh-3.5rem)] max-h-[calc(100dvh-3.5rem)] min-h-0 w-full overflow-hidden">
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-y-contain border-r p-4">
