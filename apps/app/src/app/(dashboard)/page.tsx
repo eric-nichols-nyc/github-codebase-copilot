@@ -2,6 +2,7 @@ import { asc } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
+import { FeaturesCard } from "@/src/features/projects/components/features-card";
 
 const leftRows = Array.from({ length: 36 }, (_, i) => ({
   key: `left-row-${i + 1}`,
@@ -29,15 +30,7 @@ export default async function DashboardHomePage() {
         <p className="mb-4 font-medium text-sm">Left panel</p>
         <ul className="space-y-3">
           {leftRows.map(({ key, title, body }) => (
-            <li
-              key={key}
-              className="rounded-lg border bg-card p-4 text-card-foreground shadow-sm"
-            >
-              <p className="font-medium text-sm">{title}</p>
-              <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
-                {body}
-              </p>
-            </li>
+            <FeaturesCard key={key} body={body} title={title} />
           ))}
         </ul>
       </div>
@@ -45,15 +38,7 @@ export default async function DashboardHomePage() {
         <p className="mb-4 font-medium text-sm">Right panel</p>
         <ul className="space-y-3">
           {rightRows.map(({ key, title, body }) => (
-            <li
-              key={key}
-              className="rounded-lg border bg-card p-4 text-card-foreground shadow-sm"
-            >
-              <p className="font-medium text-sm">{title}</p>
-              <p className="mt-1 text-muted-foreground text-xs leading-relaxed">
-                {body}
-              </p>
-            </li>
+            <FeaturesCard key={key} body={body} title={title} />
           ))}
         </ul>
       </div>

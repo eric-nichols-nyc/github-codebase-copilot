@@ -1,4 +1,3 @@
-/** biome-ignore lint/style/useFilenamingConvention: Next/React feature modules use PascalCase filenames */
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";

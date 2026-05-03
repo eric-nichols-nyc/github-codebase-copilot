@@ -3,7 +3,7 @@
 import { DashboardLayout } from "@repo/design-system/components/layout";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar";
 import type { ReactNode } from "react";
-import { AddRepoDialog } from "@/src/features/projects/components/AddRepoDialog";
+import { AddRepoDialog } from "@/src/features/projects/components/add-repo-dialog";
 
 import { AppSidebar } from "./sidebar";
 
