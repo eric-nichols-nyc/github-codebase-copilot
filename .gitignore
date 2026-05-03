@@ -59,6 +59,9 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# pnpm store if created inside the repo (use global store instead)
+.pnpm-store/
+
 # local env files
 .env*.local
 
