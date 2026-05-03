@@ -49,6 +49,8 @@ export const projects = pgTable(
     languages: jsonb("languages").$type<ProjectLanguagesJson | null>(),
     branches: jsonb("branches").$type<ProjectBranchesJson | null>(),
     repoTree: jsonb("repo_tree").$type<ProjectRepoTreeJson | null>(),
+    /** When set (e.g. `apps/app`), the Files tab only shows paths under this prefix. */
+    repoTreeRoot: text("repo_tree_root"),
     lastGithubUpdatedAt: timestamp("last_github_updated_at", {
       withTimezone: true,
     }),

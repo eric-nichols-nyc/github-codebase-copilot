@@ -8,6 +8,13 @@
       "when": 1777834467605,
       "tag": "0000_heavy_sentinel",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1777842202100,
+      "tag": "0001_repo_tree_root",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@repo/design-system/components/ui/button";
+import { Input } from "@repo/design-system/components/ui/input";
 import {
   Field,
   FieldContent,
@@ -70,6 +71,7 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
   const [repos, setRepos] = useState<RepoOption[]>([]);
   const [reposLoading, setReposLoading] = useState(true);
   const [selected, setSelected] = useState<string | undefined>(undefined);
+  const [fileTreeRoot, setFileTreeRoot] = useState("");
   const { mutate: importRepo, isPending: importPending } =
     useImportRepoMutation();
 
@@ -108,21 +110,29 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
       });
       return;
     }
-    importRepo(parsed, {
-      onSuccess: (data) => {
-        toast.success("Project imported", {
-          description: `${parsed.githubOwner}/${parsed.githubRepo}`,
-        });
-        onImportSuccess?.();
-        router.push(`/repos/${data.project.id}`);
+    importRepo(
+      {
+        ...parsed,
+        ...(fileTreeRoot.trim() !== ""
+          ? { repoTreeRoot: fileTreeRoot.trim() }
+          : {}),
       },
-      onError: (error) => {
-        const message =
-          error instanceof Error ? error.message : "Import failed";
-        toast.error("Import failed", { description: message });
-      },
-    });
-  }, [importRepo, onImportSuccess, router, selected]);
+      {
+        onSuccess: (data) => {
+          toast.success("Project imported", {
+            description: `${parsed.githubOwner}/${parsed.githubRepo}`,
+          });
+          onImportSuccess?.();
+          router.push(`/repos/${data.project.id}`);
+        },
+        onError: (error) => {
+          const message =
+            error instanceof Error ? error.message : "Import failed";
+          toast.error("Import failed", { description: message });
+        },
+      }
+    );
+  }, [fileTreeRoot, importRepo, onImportSuccess, router, selected]);
 
   const noReposMessage =
     repos.length === 0 && !reposLoading ? "No repositories found." : null;
@@ -157,24 +167,6 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
                 </SelectContent>
               </Select>
             )}
-            <Button
-              disabled={
-                selected === undefined || importPending || reposLoading
-              }
-              onClick={() => {
-                onImport();
-              }}
-              type="button"
-            >
-              {importPending ? (
-                <>
-                  <Spinner />
-                  Importing…
-                </>
-              ) : (
-                "Import"
-              )}
-            </Button>
           </div>
           <FieldDescription>
             Repositories are listed from your configured GitHub token (first
@@ -183,6 +175,48 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
           <FieldError>{noReposMessage}</FieldError>
         </FieldContent>
       </Field>
+
+      <Field>
+        <FieldLabel htmlFor="repo-file-tree-root">
+          File tree root (optional)
+        </FieldLabel>
+        <FieldContent>
+          <Input
+            autoComplete="off"
+            className="max-w-md"
+            id="repo-file-tree-root"
+            onChange={(e) => {
+              setFileTreeRoot(e.target.value);
+            }}
+            placeholder="e.g. apps/app"
+            value={fileTreeRoot}
+          />
+          <FieldDescription>
+            For monorepos, only files under this path are listed in the Files
+            tab. Leave empty to show the whole repository (subject to the import
+            cap).
+          </FieldDescription>
+        </FieldContent>
+      </Field>
+
+      <div className="flex w-full max-w-md justify-end pt-1">
+        <Button
+          disabled={selected === undefined || importPending || reposLoading}
+          onClick={() => {
+            onImport();
+          }}
+          type="button"
+        >
+          {importPending ? (
+            <>
+              <Spinner />
+              Importing…
+            </>
+          ) : (
+            "Import"
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

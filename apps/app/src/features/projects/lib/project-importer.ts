@@ -12,7 +12,16 @@ import {
 } from "./github-client";
 import { simplifyTree } from "./repo-tree";
 
-export async function importProject(owner: string, repo: string) {
+export type ImportProjectOptions = {
+  /** Limit synced file paths to this subtree (e.g. `apps/app`) before the 500 cap. */
+  treeRootPrefix?: string | null;
+};
+
+export async function importProject(
+  owner: string,
+  repo: string,
+  options?: ImportProjectOptions
+) {
   const [repoData, readme, languages, branches, packageJson] =
     await Promise.all([
       getRepo(owner, repo),
@@ -27,7 +36,9 @@ export async function importProject(owner: string, repo: string) {
     repo,
     repoData.default_branch ?? "main"
   );
-  const repoTree = simplifyTree(rawTree);
+  const repoTree = simplifyTree(rawTree, {
+    rootPrefix: options?.treeRootPrefix ?? null,
+  });
 
   return {
     githubOwner: owner,

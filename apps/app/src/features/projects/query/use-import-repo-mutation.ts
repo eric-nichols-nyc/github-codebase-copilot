@@ -5,6 +5,8 @@ import { useMutation } from "@tanstack/react-query";
 export type ImportRepoInput = {
   githubOwner: string;
   githubRepo: string;
+  /** Monorepo subfolder for the Files tab (e.g. `apps/app`). Omit to leave unchanged on re-import. */
+  repoTreeRoot?: string | null;
 };
 
 type ImportRepoJson =

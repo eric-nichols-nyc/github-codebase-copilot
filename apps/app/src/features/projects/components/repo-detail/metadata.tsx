@@ -69,6 +69,11 @@ export function RepoDetailMetadata({ project }: RepoDetailMetadataProps) {
             label="GitHub"
             value={`${project.githubOwner}/${project.githubRepo}`}
           />
+          {project.repoTreeRoot !== null &&
+          project.repoTreeRoot !== undefined &&
+          project.repoTreeRoot.trim() !== "" ? (
+            <MetaRow label="File tree root" value={project.repoTreeRoot.trim()} />
+          ) : null}
           <MetaRow label="Created" value={formatDate(project.createdAt)} />
           <MetaRow label="Updated" value={formatDate(project.updatedAt)} />
           <MetaRow

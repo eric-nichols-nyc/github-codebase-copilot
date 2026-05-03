@@ -1,10 +1,12 @@
 // apps/app/src/app/api/repos/import/route.ts
 // Step-by-step import flow (GitHub → Neon): docs/content/docs/apps/project-import.mdx
 
+import { and, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
 import { importProject } from "@/src/features/projects/lib/project-importer";
+import { normalizeRepoTreeRootPrefix } from "@/src/features/projects/lib/repo-tree";
 import {
   type ImportRepoRequestBody,
   resolveImportRepoBody,
@@ -25,10 +27,34 @@ export async function POST(req: Request) {
       );
     }
 
-    const { githubOwner, githubRepo } = parsed;
+    const { githubOwner, githubRepo, repoTreeRoot } = parsed;
 
-    const payload = await importProject(githubOwner, githubRepo);
+    let treeRootForSnapshot: string | null;
+    if (repoTreeRoot !== undefined) {
+      treeRootForSnapshot = normalizeRepoTreeRootPrefix(repoTreeRoot);
+    } else {
+      const [existing] = await db
+        .select({ repoTreeRoot: projects.repoTreeRoot })
+        .from(projects)
+        .where(
+          and(
+            eq(projects.githubOwner, githubOwner),
+            eq(projects.githubRepo, githubRepo)
+          )
+        )
+        .limit(1);
+      treeRootForSnapshot = normalizeRepoTreeRootPrefix(
+        existing?.repoTreeRoot
+      );
+    }
+
+    const payload = await importProject(githubOwner, githubRepo, {
+      treeRootPrefix: treeRootForSnapshot,
+    });
     const now = new Date();
+
+    const treeRootColumn =
+      repoTreeRoot !== undefined ? { repoTreeRoot } : undefined;
 
     const [project] = await db
       .insert(projects)
@@ -50,6 +76,7 @@ export async function POST(req: Request) {
 
         createdAt: now,
         updatedAt: now,
+        ...treeRootColumn,
       })
       .onConflictDoUpdate({
         target: [projects.githubOwner, projects.githubRepo],
@@ -66,6 +93,7 @@ export async function POST(req: Request) {
           lastSyncedAt: now,
           githubRaw: payload.githubRaw,
           updatedAt: now,
+          ...(treeRootColumn ?? {}),
         },
       })
       .returning();
