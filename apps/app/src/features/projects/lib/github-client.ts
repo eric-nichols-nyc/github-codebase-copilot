@@ -15,6 +15,35 @@ function githubHeaders() {
   };
 }
 
+export type GithubRepoListItem = {
+  fullName: string;
+  name: string;
+  private: boolean;
+};
+
+export async function listUserRepos(): Promise<GithubRepoListItem[]> {
+  const url = new URL(`${GITHUB_API}/user/repos`);
+  url.searchParams.set("per_page", "100");
+  url.searchParams.set("sort", "updated");
+  const res = await fetch(url.toString(), { headers: githubHeaders() });
+
+  if (!res.ok) {
+    throw new Error(`GitHub API error (${res.status})`);
+  }
+
+  const data = (await res.json()) as Array<{
+    full_name: string;
+    name: string;
+    private: boolean;
+  }>;
+
+  return data.map((r) => ({
+    fullName: r.full_name,
+    name: r.name,
+    private: r.private,
+  }));
+}
+
 export async function getRepo(owner: string, repo: string) {
   const res = await fetch(`${GITHUB_API}/repos/${owner}/${repo}`, {
     headers: githubHeaders(),
