@@ -7,24 +7,33 @@ import {
 } from "./github-client";
 
 export async function importProject(owner: string, repo: string) {
-  const repoData = await getRepo(owner, repo);
-  const readme = await getReadme(owner, repo);
-  const languages = await getLanguages(owner, repo);
-  const branches = await getBranches(owner, repo);
-  const packageJson = await getPackageJson(owner, repo).catch(() => null);
+  const [repoData, readme, languages, branches, packageJson] =
+    await Promise.all([
+      getRepo(owner, repo),
+      getReadme(owner, repo),
+      getLanguages(owner, repo),
+      getBranches(owner, repo),
+      getPackageJson(owner, repo).catch(() => null),
+    ]);
 
   return {
-    owner,
-    repo,
+    githubOwner: owner,
+    githubRepo: repo,
+
     name: repoData.name,
     description: repoData.description,
     repoUrl: repoData.html_url,
     homepageUrl: repoData.homepage,
+
     readme,
     languages,
     branches,
     packageJson,
-    lastGithubUpdatedAt: repoData.updated_at,
+
+    lastGithubUpdatedAt: repoData.updated_at
+      ? new Date(repoData.updated_at)
+      : null,
+
     githubRaw: repoData,
   };
 }

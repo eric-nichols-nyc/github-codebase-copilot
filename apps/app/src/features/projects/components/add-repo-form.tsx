@@ -17,6 +17,7 @@ import {
 } from "@repo/design-system/components/ui/select";
 import { toast } from "@repo/design-system/components/ui/sonner";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
+import { useImportRepoMutation } from "@/src/features/projects/query/use-import-repo-mutation";
 import { useCallback, useEffect, useState } from "react";
 
 type RepoOption = { fullName: string; name: string; private: boolean };
@@ -67,7 +68,8 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
   const [repos, setRepos] = useState<RepoOption[]>([]);
   const [reposLoading, setReposLoading] = useState(true);
   const [selected, setSelected] = useState<string | undefined>(undefined);
-  const [importing, setImporting] = useState(false);
+  const { mutate: importRepo, isPending: importPending } =
+    useImportRepoMutation();
 
   useEffect(() => {
     let cancelled = false;
@@ -90,7 +92,7 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
     };
   }, []);
 
-  const onImport = useCallback(async () => {
+  const onImport = useCallback(() => {
     const fullName = selected ?? "";
     const parsed = parseFullName(fullName);
     if (!parsed) {
@@ -99,31 +101,20 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
       });
       return;
     }
-    setImporting(true);
-    try {
-      const res = await fetch("/api/projects/import", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(parsed),
-      });
-      const data = (await res.json()) as {
-        error?: string;
-        projects?: { id: string }[];
-      };
-      if (!res.ok) {
-        throw new Error(data.error ?? "Import failed");
-      }
-      toast.success("Project imported", {
-        description: `${parsed.githubOwner}/${parsed.githubRepo}`,
-      });
-      onImportSuccess?.();
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Import failed";
-      toast.error("Import failed", { description: message });
-    } finally {
-      setImporting(false);
-    }
-  }, [onImportSuccess, selected]);
+    importRepo(parsed, {
+      onSuccess: () => {
+        toast.success("Project imported", {
+          description: `${parsed.githubOwner}/${parsed.githubRepo}`,
+        });
+        onImportSuccess?.();
+      },
+      onError: (error) => {
+        const message =
+          error instanceof Error ? error.message : "Import failed";
+        toast.error("Import failed", { description: message });
+      },
+    });
+  }, [importRepo, onImportSuccess, selected]);
 
   const noReposMessage =
     repos.length === 0 && !reposLoading ? "No repositories found." : null;
@@ -159,13 +150,15 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
               </Select>
             )}
             <Button
-              disabled={selected === undefined || importing || reposLoading}
+              disabled={
+                selected === undefined || importPending || reposLoading
+              }
               onClick={() => {
                 onImport();
               }}
               type="button"
             >
-              {importing ? (
+              {importPending ? (
                 <>
                   <Spinner />
                   Importing…

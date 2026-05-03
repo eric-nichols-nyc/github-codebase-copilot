@@ -1,15 +1,14 @@
-import { listUserRepos } from "@/src/features/projects/lib/github-client";
+import { NextResponse } from "next/server";
+import { getProjects } from "@/src/features/projects/lib/project-service";
 
 export async function GET() {
   try {
-    const repos = await listUserRepos();
-    return Response.json({ repos });
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to list repositories";
-    const missingToken = message.includes("GITHUB_TOKEN");
-    return Response.json(
-      { error: message },
-      { status: missingToken ? 503 : 500 },
+    const data = await getProjects();
+    return NextResponse.json(data);
+  } catch (err) {
+    return NextResponse.json(
+      { error: "Failed to fetch projects" },
+      { status: 500 }
     );
   }
 }
