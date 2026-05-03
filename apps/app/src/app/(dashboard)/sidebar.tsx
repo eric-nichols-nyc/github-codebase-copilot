@@ -16,7 +16,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const nav = [
-  { href: "/", label: "Overview", icon: LayoutDashboard },
+  { href: "/repos", label: "Repositories", icon: LayoutDashboard },
   { href: "/settings", label: "Settings", icon: Settings2 },
 ];
 
@@ -41,8 +41,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={
-                      pathname === href ||
-                      (href !== "/" && pathname.startsWith(href))
+                      pathname === href || pathname.startsWith(`${href}/`)
                     }
                     tooltip={label}
                   >

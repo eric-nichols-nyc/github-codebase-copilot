@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { listGitHubUserRepos } from "@/src/features/projects/lib/github-client";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const repos = await listGitHubUserRepos();

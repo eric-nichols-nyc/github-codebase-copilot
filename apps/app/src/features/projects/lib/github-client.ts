@@ -2,10 +2,34 @@
 
 const GITHUB_API = "https://api.github.com";
 
-function getHeaders() {
+/** GitHub rejects requests without a valid User-Agent (often 403). */
+const DEFAULT_USER_AGENT =
+  "github-codebase-copilot/1.0 (+https://github.com/github-codebase-copilot)";
+
+function githubToken(): string | undefined {
+  const raw = process.env.GITHUB_TOKEN ?? process.env.GITHUB_ACCESS_TOKEN;
+  if (typeof raw !== "string") {
+    return;
+  }
+  const t = raw.trim();
+  if (t.length === 0) {
+    return;
+  }
+  return t;
+}
+
+export function githubApiHeaders(): Record<string, string> {
+  const token = githubToken();
+  const ua =
+    typeof process.env.GITHUB_API_USER_AGENT === "string" &&
+    process.env.GITHUB_API_USER_AGENT.trim() !== ""
+      ? process.env.GITHUB_API_USER_AGENT.trim()
+      : DEFAULT_USER_AGENT;
+
   return {
     Accept: "application/vnd.github+json",
-    Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+    "User-Agent": ua,
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 }
 
@@ -15,11 +39,77 @@ export type GithubRepoListItem = {
   private: boolean;
 };
 
+function nonArrayGitHubErrorMessage(data: unknown): string {
+  if (typeof data === "object" && data !== null && "message" in data) {
+    const m = (data as { message?: unknown }).message;
+    if (typeof m === "string") {
+      return m;
+    }
+  }
+  return "Expected a JSON array from GitHub.";
+}
+
+function tryMapUserRepoRow(row: unknown): GithubRepoListItem | null {
+  if (typeof row !== "object" || row === null) {
+    return null;
+  }
+  const r = row as {
+    full_name?: unknown;
+    name?: unknown;
+    private?: unknown;
+  };
+  if (
+    typeof r.full_name !== "string" ||
+    typeof r.name !== "string" ||
+    typeof r.private !== "boolean"
+  ) {
+    return null;
+  }
+  return {
+    fullName: r.full_name,
+    name: r.name,
+    private: r.private,
+  };
+}
+
+/**
+ * Maps GitHub `GET /user/repos` JSON (array of repo objects) into list items.
+ * @throws If the payload is not a JSON array (e.g. rate-limit error object).
+ */
+export function mapGitHubUserReposResponse(data: unknown): GithubRepoListItem[] {
+  if (!Array.isArray(data)) {
+    throw new Error(nonArrayGitHubErrorMessage(data));
+  }
+
+  const out: GithubRepoListItem[] = [];
+  for (const row of data) {
+    const item = tryMapUserRepoRow(row);
+    if (item !== null) {
+      out.push(item);
+    }
+  }
+  if (data.length > 0 && out.length === 0) {
+    throw new Error(
+      "GitHub returned repositories but none matched the expected shape (full_name, name, private)."
+    );
+  }
+  return out;
+}
+
 /** Repositories visible to `GITHUB_TOKEN` (up to 100, recently updated first). */
 export async function listGitHubUserRepos(): Promise<GithubRepoListItem[]> {
+  if (githubToken() === undefined) {
+    throw new Error(
+      "GITHUB_TOKEN is not set (or is empty). Add it to apps/app/.env.local."
+    );
+  }
+
   const res = await fetch(
     `${GITHUB_API}/user/repos?per_page=100&sort=updated`,
-    { headers: getHeaders() }
+    {
+      headers: githubApiHeaders(),
+      cache: "no-store",
+    }
   );
 
   if (!res.ok) {
@@ -29,22 +119,14 @@ export async function listGitHubUserRepos(): Promise<GithubRepoListItem[]> {
     throw new Error("Failed to list repositories");
   }
 
-  const data = (await res.json()) as Array<{
-    full_name: string;
-    name: string;
-    private: boolean;
-  }>;
-
-  return data.map((r) => ({
-    fullName: r.full_name,
-    name: r.name,
-    private: r.private,
-  }));
+  const data: unknown = await res.json();
+  return mapGitHubUserReposResponse(data);
 }
 
 export async function getRepo(owner: string, repo: string) {
   const res = await fetch(`${GITHUB_API}/repos/${owner}/${repo}`, {
-    headers: getHeaders(),
+    headers: githubApiHeaders(),
+    cache: "no-store",
   });
 
   if (!res.ok) {
@@ -74,10 +156,8 @@ export async function getReadme(owner: string, repo: string) {
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/readme`,
     {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      },
+      headers: githubApiHeaders(),
+      cache: "no-store",
     }
   );
 
@@ -86,9 +166,11 @@ export async function getReadme(owner: string, repo: string) {
     return null;
   }
 
-  const data = await res.json();
+  const data = (await res.json()) as { content?: string };
 
-  if (!data.content) return null;
+  if (!data.content) {
+    return null;
+  }
 
   // Decode base64 → string
   const decoded = Buffer.from(data.content, "base64").toString("utf-8");
@@ -99,10 +181,8 @@ export async function getLanguages(owner: string, repo: string) {
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/languages`,
     {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      },
+      headers: githubApiHeaders(),
+      cache: "no-store",
     }
   );
 
@@ -119,10 +199,8 @@ export async function getBranches(owner: string, repo: string) {
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/branches`,
     {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      },
+      headers: githubApiHeaders(),
+      cache: "no-store",
     }
   );
 
@@ -130,11 +208,13 @@ export async function getBranches(owner: string, repo: string) {
     return [];
   }
 
-  const data = await res.json();
+  const data = (await res.json()) as Array<{
+    name?: string;
+    commit?: { sha?: string };
+  }>;
 
-  // Return simplified version
-  return data.map((branch: any) => ({
-    name: branch.name,
+  return data.map((branch) => ({
+    name: branch.name ?? "",
     sha: branch.commit?.sha,
   }));
 }
@@ -143,10 +223,8 @@ export async function getPackageJson(owner: string, repo: string) {
   const res = await fetch(
     `https://api.github.com/repos/${owner}/${repo}/contents/package.json`,
     {
-      headers: {
-        Accept: "application/vnd.github+json",
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      },
+      headers: githubApiHeaders(),
+      cache: "no-store",
     }
   );
 
@@ -155,26 +233,39 @@ export async function getPackageJson(owner: string, repo: string) {
     return null;
   }
 
-  const data = await res.json();
+  const data = (await res.json()) as { content?: string };
 
-  if (!data.content) return null;
+  if (!data.content) {
+    return null;
+  }
 
   try {
     const decoded = Buffer.from(data.content, "base64").toString("utf-8");
-    const parsed = JSON.parse(decoded);
+    const parsed = JSON.parse(decoded) as {
+      name?: string;
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
 
     return {
       name: parsed.name,
-      dependencies: parsed.dependencies || {},
-      devDependencies: parsed.devDependencies || {},
+      dependencies: parsed.dependencies ?? {},
+      devDependencies: parsed.devDependencies ?? {},
     };
-  } catch (err) {
+  } catch {
     return null;
   }
 }
 
-export function extractTechStack(pkg: any) {
-  if (!pkg) return [];
+type PackageJsonDeps = {
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+};
+
+export function extractTechStack(pkg: PackageJsonDeps | null | undefined) {
+  if (!pkg) {
+    return [];
+  }
 
   const deps = {
     ...pkg.dependencies,

@@ -7,17 +7,19 @@ export type ImportRepoInput = {
   githubRepo: string;
 };
 
-type ImportRepoResponse =
-  | { ok: true; count: number; projects: { id: string }[] }
+type ImportRepoJson =
+  | { ok: true; project: { id: string } }
   | { error: string };
 
-async function importRepo(input: ImportRepoInput): Promise<ImportRepoResponse> {
+export type ImportRepoSuccess = { ok: true; project: { id: string } };
+
+async function importRepo(input: ImportRepoInput): Promise<ImportRepoSuccess> {
   const res = await fetch("/api/repos/import", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
-  const data = (await res.json()) as ImportRepoResponse;
+  const data = (await res.json()) as ImportRepoJson;
   if (!res.ok) {
     const message =
       "error" in data && typeof data.error === "string"
@@ -25,7 +27,7 @@ async function importRepo(input: ImportRepoInput): Promise<ImportRepoResponse> {
         : "Import failed";
     throw new Error(message);
   }
-  if (!("ok" in data) || data.ok !== true) {
+  if (!("ok" in data) || data.ok !== true || !("project" in data)) {
     throw new Error("Import failed");
   }
   return data;

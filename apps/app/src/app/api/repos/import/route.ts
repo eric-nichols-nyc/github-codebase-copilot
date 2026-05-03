@@ -1,8 +1,6 @@
 // apps/app/src/app/api/repos/import/route.ts
 // Step-by-step import flow (GitHub → Neon): docs/content/docs/apps/project-import.mdx
 
-const TRAILING_SLASH = /\/$/;
-
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
@@ -12,25 +10,27 @@ import {
   getReadme,
   getRepo,
 } from "@/src/features/projects/lib/github-client";
+import {
+  type ImportRepoRequestBody,
+  resolveImportRepoBody,
+} from "@/src/features/projects/lib/resolve-import-repo-body";
 
 export async function POST(req: Request) {
   try {
-    const { repoInput } = await req.json();
+    const body = (await req.json()) as ImportRepoRequestBody;
+    const parsed = resolveImportRepoBody(body);
 
-    if (!repoInput?.includes("/")) {
+    if (parsed === null) {
       return NextResponse.json(
-        { error: "Use owner/repo format, like vercel/next.js" },
+        {
+          error:
+            "Provide githubOwner and githubRepo, or repoInput as owner/repo (e.g. vercel/next.js).",
+        },
         { status: 400 }
       );
     }
 
-    const cleaned = repoInput
-      .trim()
-      .replace("https://github.com/", "")
-      .replace("http://github.com/", "")
-      .replace(TRAILING_SLASH, "");
-
-    const [githubOwner, githubRepo] = cleaned.split("/");
+    const { githubOwner, githubRepo } = parsed;
 
     const [repoData, readme, languages, branches] = await Promise.all([
       getRepo(githubOwner, githubRepo),
@@ -83,7 +83,17 @@ export async function POST(req: Request) {
       })
       .returning();
 
-    return NextResponse.json(project);
+    if (project === undefined) {
+      return NextResponse.json(
+        { error: "Failed to persist project." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      ok: true as const,
+      project: { id: project.id },
+    });
   } catch (error) {
     console.error(error);
 

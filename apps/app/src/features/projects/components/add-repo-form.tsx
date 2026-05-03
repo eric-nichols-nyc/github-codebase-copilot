@@ -18,6 +18,7 @@ import {
 import { toast } from "@repo/design-system/components/ui/sonner";
 import { Spinner } from "@repo/design-system/components/ui/spinner";
 import { useImportRepoMutation } from "@/src/features/projects/query/use-import-repo-mutation";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 type RepoOption = { fullName: string; name: string; private: boolean };
@@ -65,6 +66,7 @@ export type AddRepoFormProps = {
 };
 
 export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
+  const router = useRouter();
   const [repos, setRepos] = useState<RepoOption[]>([]);
   const [reposLoading, setReposLoading] = useState(true);
   const [selected, setSelected] = useState<string | undefined>(undefined);
@@ -72,23 +74,28 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
     useImportRepoMutation();
 
   useEffect(() => {
-    let cancelled = false;
+    let alive = true;
     setReposLoading(true);
-    loadGithubRepos().then((result) => {
-      if (cancelled) {
-        return;
-      }
-      if (result.ok) {
-        setRepos(result.repos);
-      } else {
-        toast.error("Could not load repositories", {
-          description: result.error,
-        });
-      }
-      setReposLoading(false);
-    });
+    loadGithubRepos()
+      .then((result) => {
+        if (!alive) {
+          return;
+        }
+        if (result.ok) {
+          setRepos(result.repos);
+        } else {
+          toast.error("Could not load repositories", {
+            description: result.error,
+          });
+        }
+      })
+      .finally(() => {
+        if (alive) {
+          setReposLoading(false);
+        }
+      });
     return () => {
-      cancelled = true;
+      alive = false;
     };
   }, []);
 
@@ -102,11 +109,12 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
       return;
     }
     importRepo(parsed, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         toast.success("Project imported", {
           description: `${parsed.githubOwner}/${parsed.githubRepo}`,
         });
         onImportSuccess?.();
+        router.push(`/repos/${data.project.id}`);
       },
       onError: (error) => {
         const message =
@@ -114,7 +122,7 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
         toast.error("Import failed", { description: message });
       },
     });
-  }, [importRepo, onImportSuccess, selected]);
+  }, [importRepo, onImportSuccess, router, selected]);
 
   const noReposMessage =
     repos.length === 0 && !reposLoading ? "No repositories found." : null;
