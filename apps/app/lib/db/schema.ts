@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   boolean,
   jsonb,
@@ -37,6 +38,13 @@ export const projects = pgTable(
   "projects",
   {
     id: uuid("id").primaryKey().defaultRandom(),
+
+    slug: text("slug")
+      .notNull()
+      .unique()
+      .default(sql`replace(gen_random_uuid()::text, '-', '')`),
+    published: boolean("published").default(false).notNull(),
+    visibility: text("visibility").default("private").notNull(),
 
     githubOwner: text("github_owner").notNull(),
     githubRepo: text("github_repo").notNull(),

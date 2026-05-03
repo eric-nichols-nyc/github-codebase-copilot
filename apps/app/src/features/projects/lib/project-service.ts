@@ -1,14 +1,17 @@
 import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
+import { slugFromGitHubRepo } from "./project-slug";
 
 export async function createProjectFromGithub(data: any) {
   const now = new Date();
+  const slug = slugFromGitHubRepo(data.githubOwner, data.githubRepo);
 
   const [project] = await db
     .insert(projects)
     .values({
       githubOwner: data.githubOwner,
       githubRepo: data.githubRepo,
+      slug,
 
       name: data.name,
       description: data.description,

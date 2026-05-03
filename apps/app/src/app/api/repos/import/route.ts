@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { projects } from "@/lib/db/schema";
 import { importProject } from "@/src/features/projects/lib/project-importer";
 import { normalizeRepoTreeRootPrefix } from "@/src/features/projects/lib/repo-tree";
+import { slugFromGitHubRepo } from "@/src/features/projects/lib/project-slug";
 import {
   type ImportRepoRequestBody,
   resolveImportRepoBody,
@@ -56,11 +57,14 @@ export async function POST(req: Request) {
     const treeRootColumn =
       repoTreeRoot !== undefined ? { repoTreeRoot } : undefined;
 
+    const slug = slugFromGitHubRepo(githubOwner, githubRepo);
+
     const [project] = await db
       .insert(projects)
       .values({
         githubOwner: payload.githubOwner,
         githubRepo: payload.githubRepo,
+        slug,
 
         name: payload.name,
         description: payload.description,
