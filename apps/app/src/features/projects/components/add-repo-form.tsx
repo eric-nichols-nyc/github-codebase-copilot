@@ -131,7 +131,7 @@ export function AddRepoForm({
           const base = reposDetailBase.endsWith("/")
             ? reposDetailBase.slice(0, -1)
             : reposDetailBase;
-          router.push(`${base}/${data.project.id}`);
+          router.push(`${base}/${data.project.slug}`);
         },
         onError: (error) => {
           const message =

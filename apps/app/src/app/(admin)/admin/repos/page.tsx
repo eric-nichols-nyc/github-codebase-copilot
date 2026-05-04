@@ -7,7 +7,7 @@ import { firstRepoDetailHref } from "@/src/features/projects/lib/repo-routing";
 
 export default async function ReposIndexPage() {
   const projectRows = await db
-    .select({ id: projects.id })
+    .select({ slug: projects.slug })
     .from(projects)
     .orderBy(asc(projects.githubOwner), asc(projects.githubRepo));
 

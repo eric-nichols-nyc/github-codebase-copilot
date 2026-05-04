@@ -6,15 +6,15 @@ import { RepoCard } from "./repo-card";
 
 type ProjectsListProps = {
   readonly projects: readonly ProjectSelectRow[];
-  /** When set, each row links to `{reposBasePath}/{id}` and the active id is highlighted. */
-  readonly activeRepoId?: string;
+  /** When set, each row links to `{reposBasePath}/{projects.slug}` and highlights the active slug. */
+  readonly activeRepoSlug?: string;
   /** Default `/repos`. Use `/admin/repos` on admin repo pages. */
   readonly reposBasePath?: "/repos" | "/admin/repos";
 };
 
 export function ProjectsList({
   projects: rows,
-  activeRepoId,
+  activeRepoSlug,
   reposBasePath = "/repos",
 }: ProjectsListProps) {
   const base = reposBasePath.endsWith("/")
@@ -37,7 +37,7 @@ export function ProjectsList({
             title={p.displayTitle ?? `${p.githubOwner}/${p.githubRepo}`}
           />
         );
-        const isActive = activeRepoId === p.id;
+        const isActive = activeRepoSlug === p.slug;
         return (
           <li key={p.id}>
             <Link
@@ -45,7 +45,7 @@ export function ProjectsList({
                 "block rounded-lg outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring",
                 isActive ? "ring-2 ring-ring" : null
               )}
-              href={`${base}/${p.id}`}
+              href={`${base}/${p.slug}`}
             >
               {card}
             </Link>

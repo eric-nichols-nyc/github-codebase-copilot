@@ -10,10 +10,13 @@ export type ImportRepoInput = {
 };
 
 type ImportRepoJson =
-  | { ok: true; project: { id: string } }
+  | { ok: true; project: { id: string; slug: string } }
   | { error: string };
 
-export type ImportRepoSuccess = { ok: true; project: { id: string } };
+export type ImportRepoSuccess = {
+  ok: true;
+  project: { id: string; slug: string };
+};
 
 async function importRepo(input: ImportRepoInput): Promise<ImportRepoSuccess> {
   const res = await fetch("/api/repos/import", {

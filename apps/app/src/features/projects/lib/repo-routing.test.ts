@@ -7,14 +7,14 @@ describe("firstRepoDetailHref", () => {
     expect(firstRepoDetailHref([])).toBeNull();
   });
 
-  it("returns /repos/{id} for the first project", () => {
+  it("returns /repos/{slug} for the first project", () => {
     expect(
-      firstRepoDetailHref([{ id: "a" }, { id: "b" }])
+      firstRepoDetailHref([{ slug: "a" }, { slug: "b" }])
     ).toBe("/repos/a");
   });
 
-  it("returns /admin/repos/{id} when base is admin", () => {
-    expect(firstRepoDetailHref([{ id: "x" }], "/admin/repos")).toBe(
+  it("returns /admin/repos/{slug} when base is admin", () => {
+    expect(firstRepoDetailHref([{ slug: "x" }], "/admin/repos")).toBe(
       "/admin/repos/x"
     );
   });

@@ -97,6 +97,7 @@ export async function POST(req: Request) {
           lastSyncedAt: now,
           githubRaw: payload.githubRaw,
           updatedAt: now,
+          slug,
           ...(treeRootColumn ?? {}),
         },
       })
@@ -111,7 +112,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       ok: true as const,
-      project: { id: project.id },
+      project: { id: project.id, slug: project.slug },
     });
   } catch (error) {
     console.error(error);
