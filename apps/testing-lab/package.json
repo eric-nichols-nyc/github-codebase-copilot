@@ -35,7 +35,7 @@
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "^4.5.2",
     "jsdom": "^26.1.0",
-    "msw": "^2.9.0",
+    "msw": "^2.14.2",
     "tailwindcss": "^4.1.17",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
