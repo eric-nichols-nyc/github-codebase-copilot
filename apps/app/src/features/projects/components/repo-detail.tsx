@@ -18,12 +18,14 @@ import { RepoDetailShell } from "./repo-detail/shell";
 
 type RepoDetailProps = {
   readonly project: ProjectSelectRow;
+  /** Mirrors the page: `/admin/repos` shows admin-only overview sections. */
+  readonly reposBasePath: "/repos" | "/admin/repos";
 };
 
 const repoDetailTabTriggerClassName =
   "min-w-[5.5rem] flex-1 rounded-none border-0 bg-transparent px-2 py-2 text-center font-medium text-muted-foreground text-xs shadow-none transition-colors hover:bg-muted/70 hover:text-foreground sm:min-w-0 sm:px-3 sm:text-sm data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-none dark:data-[state=active]:bg-accent dark:data-[state=active]:text-accent-foreground";
 
-export function RepoDetail({ project }: RepoDetailProps) {
+export function RepoDetail({ project, reposBasePath }: RepoDetailProps) {
   return (
     <RepoDetailShell>
       <RepoDetailHeader project={project} />
@@ -76,7 +78,7 @@ export function RepoDetail({ project }: RepoDetailProps) {
           className="min-h-0 flex-1 overflow-y-auto focus-visible:outline-none"
           value="overview"
         >
-          <RepoDetailOverview project={project} />
+          <RepoDetailOverview project={project} reposBasePath={reposBasePath} />
         </TabsContent>
         <TabsContent
           className="min-h-0 flex-1 overflow-y-auto focus-visible:outline-none"

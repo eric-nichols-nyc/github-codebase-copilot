@@ -21,7 +21,6 @@ import { usePathname } from "next/navigation";
 
 const nav = [
   { href: "/repos", label: "Repositories", icon: LayoutDashboard },
-  { href: "/settings", label: "Settings", icon: Settings2 },
 ];
 
 export function PublicAppSidebar() {

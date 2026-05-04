@@ -39,7 +39,7 @@ export async function RepoDetailRootPage({
         />
       </div>
       <div className="flex min-h-0 min-w-0 flex-[11] flex-col overflow-hidden overscroll-y-contain p-4 lg:flex-1">
-        <RepoDetail project={project} />
+        <RepoDetail project={project} reposBasePath={reposBasePath} />
       </div>
     </div>
   );

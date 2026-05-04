@@ -15,22 +15,81 @@ type RepoReadmeViewerProps = {
   readonly project: ProjectSelectRow;
 };
 
-const markdownComponents: Components = {
-  a: ({ href, children, ...props }) => {
-    const external =
-      typeof href === "string" &&
-      (href.startsWith("http://") || href.startsWith("https://"));
-    return (
-      <a
-        href={href}
-        {...props}
-        {...(external ? { rel: "noopener noreferrer", target: "_blank" } : {})}
-      >
-        {children}
-      </a>
-    );
-  },
-};
+/** Turn README `![](./docs/x.png)` into a raw.githubusercontent.com URL. */
+function resolveReadmeImageUrl(
+  src: string | undefined,
+  project: ProjectSelectRow,
+): string | undefined {
+  if (src === undefined || src.trim() === "") {
+    return;
+  }
+  const s = src.trim();
+  if (s.startsWith("data:")) {
+    return s;
+  }
+  if (s.startsWith("http://") || s.startsWith("https://")) {
+    return s;
+  }
+  if (s.startsWith("//")) {
+    return `https:${s}`;
+  }
+
+  const raw = project.githubRaw as { default_branch?: unknown } | null;
+  const branch =
+    typeof raw?.default_branch === "string" && raw.default_branch.trim() !== ""
+      ? raw.default_branch.trim()
+      : "main";
+  const base = `https://raw.githubusercontent.com/${project.githubOwner}/${project.githubRepo}/${branch}/`;
+  try {
+    return new URL(s, base).href;
+  } catch {
+    return;
+  }
+}
+
+function markdownComponentsFor(project: ProjectSelectRow): Components {
+  return {
+    a: ({ href, children, ...props }) => {
+      const external =
+        typeof href === "string" &&
+        (href.startsWith("http://") || href.startsWith("https://"));
+      return (
+        <a
+          href={href}
+          {...props}
+          {...(external ? { rel: "noopener noreferrer", target: "_blank" } : {})}
+        >
+          {children}
+        </a>
+      );
+    },
+    img: ({ node: _node, src, alt, title, ...props }) => {
+      const resolved = resolveReadmeImageUrl(
+        typeof src === "string" ? src : undefined,
+        project,
+      );
+      if (!resolved) {
+        return (
+          <span className="text-muted-foreground text-xs italic">
+            Invalid image URL
+          </span>
+        );
+      }
+      return (
+        <img
+          {...props}
+          alt={alt ?? ""}
+          className="my-2 max-h-[50vh] max-w-full rounded-md border object-contain"
+          decoding="async"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          src={resolved}
+          title={title ?? undefined}
+        />
+      );
+    },
+  };
+}
 
 export function RepoReadmeViewer({ project }: RepoReadmeViewerProps) {
   if (!project.readme) {
@@ -53,7 +112,7 @@ export function RepoReadmeViewer({ project }: RepoReadmeViewerProps) {
           data-slot="readme-markdown"
         >
           <ReactMarkdown
-            components={markdownComponents}
+            components={markdownComponentsFor(project)}
             remarkPlugins={[remarkGfm]}
           >
             {project.readme}

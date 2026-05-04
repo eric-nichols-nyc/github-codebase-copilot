@@ -25,9 +25,14 @@ import {
 
 type RepoDetailOverviewProps = {
   readonly project: ProjectSelectRow;
+  readonly reposBasePath: "/repos" | "/admin/repos";
 };
 
-export function RepoDetailOverview({ project }: RepoDetailOverviewProps) {
+export function RepoDetailOverview({
+  project,
+  reposBasePath,
+}: RepoDetailOverviewProps) {
+  const showBranches = reposBasePath === "/admin/repos";
   const languages = project.languages ?? {};
   const totalBytes = Object.values(languages).reduce((a, b) => a + b, 0);
   const branches = normalizeBranches(project.branches);
@@ -113,51 +118,53 @@ export function RepoDetailOverview({ project }: RepoDetailOverviewProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="px-3 pt-3 pb-2">
-          <CardTitle className="flex items-center gap-2 font-medium text-sm">
-            <GitBranch className="h-4 w-4" />
-            Branches
-            <Badge className="ml-auto text-xs" variant="outline">
-              {branches.length}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-3 pb-3">
-          {branches.length > 0 ? (
-            <div className="max-h-40 space-y-1 overflow-y-auto">
-              {branches.map((branch) => (
-                <div
-                  className="flex items-center justify-between py-1 text-xs"
-                  key={`${branch.sha}-${branch.name}`}
-                >
-                  <span
-                    className={
-                      branch.name === defaultBranch
-                        ? "truncate font-medium text-foreground"
-                        : "truncate text-muted-foreground"
-                    }
+      {showBranches ? (
+        <Card>
+          <CardHeader className="px-3 pt-3 pb-2">
+            <CardTitle className="flex items-center gap-2 font-medium text-sm">
+              <GitBranch className="h-4 w-4" />
+              Branches
+              <Badge className="ml-auto text-xs" variant="outline">
+                {branches.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="px-3 pb-3">
+            {branches.length > 0 ? (
+              <div className="max-h-40 space-y-1 overflow-y-auto">
+                {branches.map((branch) => (
+                  <div
+                    className="flex items-center justify-between py-1 text-xs"
+                    key={`${branch.sha}-${branch.name}`}
                   >
-                    {branch.name || "(unnamed)"}
-                  </span>
-                  {branch.name === defaultBranch && defaultBranch !== "" ? (
-                    <Badge
-                      className="px-1.5 py-0 text-[10px]"
-                      variant="secondary"
+                    <span
+                      className={
+                        branch.name === defaultBranch
+                          ? "truncate font-medium text-foreground"
+                          : "truncate text-muted-foreground"
+                      }
                     >
-                      default
-                    </Badge>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-xs">
-              No branches loaded yet.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+                      {branch.name || "(unnamed)"}
+                    </span>
+                    {branch.name === defaultBranch && defaultBranch !== "" ? (
+                      <Badge
+                        className="px-1.5 py-0 text-[10px]"
+                        variant="secondary"
+                      >
+                        default
+                      </Badge>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-muted-foreground text-xs">
+                No branches loaded yet.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader className="px-3 pt-3 pb-2">

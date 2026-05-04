@@ -15,12 +15,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@repo/design-system/components/ui/sidebar";
-import { LayoutDashboard, Shield } from "lucide-react";
+import { LayoutDashboard, Settings, Shield } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const nav = [
   { href: "/admin/repos", label: "Repositories", icon: LayoutDashboard },
+  { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 export function AdminAppSidebar() {
