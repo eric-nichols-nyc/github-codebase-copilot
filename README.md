@@ -99,7 +99,7 @@ next-forge uses a monorepo structure managed by Turborepo:
 next-forge/
 ├── apps/           # Deployable applications
 │   ├── web/        # Marketing website (port 3001)
-│   ├── app/        # Main application (port 3000)
+│   ├── app/        # Main application (port 3025; see below)
 │   ├── api/        # API server
 │   ├── docs/       # Documentation
 │   ├── email/      # Email templates
@@ -112,6 +112,52 @@ next-forge/
 ```
 
 Each app is self-contained and independently deployable. Packages are shared across apps for consistency and maintainability.
+
+## How `apps/app` works
+
+`apps/app` is the main **Next.js** product UI: import GitHub repositories into **Neon Postgres**, list and open them, browse a simplified file tree and README, and edit portfolio-style metadata (titles, summaries, talking points, tags, and more—see `apps/app/lib/db/schema.ts`).
+
+### Run it locally
+
+From `apps/app`:
+
+```sh
+pnpm dev
+```
+
+That starts Next.js with **HTTPS on port 3025** (`next dev --experimental-https -p 3025`). Neon Auth uses **Secure** cookies, so local sign-in expects HTTPS at that origin. The repo’s `apps/app/.env.example` notes that `pnpm dev:http` alone can break sessions; use `pnpm dev` for auth testing and point OAuth redirect URLs at `https://localhost:3025` when needed.
+
+Database CLI helpers live in the same package: `pnpm db:generate`, `pnpm db:migrate`, `pnpm db:push`, `pnpm db:studio`.
+
+### Stack (at a glance)
+
+| Area | Choice |
+| --- | --- |
+| Framework | Next.js App Router (see `apps/app/src/app/`) |
+| UI | `@repo/design-system` (layout, sidebar, components) |
+| Auth | Neon Auth (`@neondatabase/auth`) — server helpers in `apps/app/lib/auth/server.ts`, client provider in `apps/app/src/providers/neon-auth-provider.tsx` |
+| Data | Drizzle ORM + `@neondatabase/serverless` (`apps/app/lib/db/`) |
+| Client fetching | TanStack Query (`apps/app/src/providers/query-provider.tsx`) |
+
+### Routes and layout
+
+- **`apps/app/src/app/layout.tsx`** — Root HTML shell: theme provider, Neon Auth provider, React Query, Sonner toaster.
+- **`apps/app/src/app/(dashboard)/`** — “Public” app chrome: **`AppShell`** wraps pages with **`PublicAppSidebar`** (e.g. `/repos`, `/settings`). The dashboard home **`/`** redirects to **`/repos`**.
+- **`apps/app/src/app/(admin)/admin/`** — Admin UI reuses **`AppShell`** but swaps in **`AdminAppSidebar`** and shows the add-repo control in the header when the path is under `/admin`. **`apps/app/src/app/(admin)/admin/layout.tsx`** is a server layout that loads the session with `auth.getSession()` and **`redirect("/auth/sign-in")`** if the user is missing.
+- **`apps/app/src/middleware.ts`** — Neon Auth middleware, matcher **`/admin/:path*`** (cookie/session handling for admin routes).
+- **`apps/app/src/app/auth/[path]/page.tsx`** — Neon **`AuthView`** for sign-in and other auth screens (`generateStaticParams` from `authViewPaths`).
+
+Sidebar and header behavior are centralized in **`apps/app/src/app/(dashboard)/app-shell.tsx`**: it uses `usePathname()` so URLs containing **`/admin`** get the admin sidebar and label; everything else uses the public sidebar.
+
+### Data and APIs
+
+- **Schema** — `apps/app/lib/db/schema.ts` defines tables such as **`projects`** (GitHub coordinates, README, languages, branches, filtered repo tree JSON, and editorial fields) and **`notes`**.
+- **Feature code** — `apps/app/src/features/projects/` holds components, GitHub client, import/sync helpers, and repo-tree utilities used by the UI and route handlers.
+- **Route handlers** — Under `apps/app/src/app/api/` (for example **`api/repos`** for list/import/sync and project CRUD, **`api/auth`** for Neon Auth, **`api/db/health`** for a DB check). GitHub calls use **`GITHUB_TOKEN`** (or **`GITHUB_ACCESS_TOKEN`**) from env.
+
+### Environment
+
+Copy **`apps/app/.env.example`** to **`apps/app/.env`**. You need at least **`DATABASE_URL`**, **`NEON_AUTH_BASE_URL`**, **`NEON_AUTH_COOKIE_SECRET`** (32+ characters), and a **`GITHUB_TOKEN`** if you use import or GitHub-backed features.
 
 ## Documentation
 
