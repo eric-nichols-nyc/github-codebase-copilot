@@ -2,12 +2,25 @@
 
 import { DashboardLayout } from "@repo/design-system/components/layout";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { AddRepoDialog } from "@/src/features/projects/components/add-repo-dialog";
 
 import { AppSidebar } from "./sidebar";
 
-export function AppShell({ children }: { children: ReactNode }) {
+type AppShellProps = {
+  readonly children: ReactNode;
+  /** Shown next to the sidebar trigger (e.g. "Admin" under `/admin`). */
+  readonly headerLabel?: string;
+};
+
+export function AppShell({
+  children,
+  headerLabel = "Dashboard",
+}: AppShellProps) {
+  const pathname = usePathname();
+  const showAddRepoDialog = pathname.includes("/admin");
+
   return (
     <DashboardLayout
       header={
@@ -15,11 +28,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <div className="flex min-w-0 items-center gap-2">
             <SidebarTrigger />
             <span className="truncate text-muted-foreground text-sm">
-              Dashboard
+              {headerLabel}
             </span>
           </div>
           <div className="flex shrink-0 justify-center">
-            <AddRepoDialog />
+            {showAddRepoDialog ? <AddRepoDialog /> : null}
           </div>
           <div className="min-w-0" />
         </div>

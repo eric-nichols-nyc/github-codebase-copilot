@@ -28,7 +28,12 @@ export function AppSidebar() {
       <SidebarHeader className="border-sidebar-border border-b">
         <div className="flex items-center gap-2 px-2 py-2">
           <LayoutDashboard className="size-5 text-primary" />
-          <span className="font-semibold">App</span>
+          <Link
+            href="/repos"
+            className="font-semibold text-sidebar-foreground hover:underline"
+          >
+            App
+          </Link>
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -41,7 +46,10 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={
-                      pathname === href || pathname.startsWith(`${href}/`)
+                      pathname === href ||
+                      pathname.startsWith(`${href}/`) ||
+                      (href === "/repos" &&
+                        pathname.startsWith("/admin/repos"))
                     }
                     tooltip={label}
                   >

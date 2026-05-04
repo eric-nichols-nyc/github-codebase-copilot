@@ -2,7 +2,8 @@
   "name": "app",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3025",
+    "dev": "next dev --experimental-https -p 3025",
+    "dev:http": "next dev -p 3025",
     "build": "next build",
     "start": "next start",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -15,6 +16,7 @@
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@neondatabase/auth": "^0.3.0-beta",
     "@neondatabase/serverless": "^1.1.0",
     "@repo/design-system": "workspace:*",
     "@tanstack/react-query": "^5.90.12",
