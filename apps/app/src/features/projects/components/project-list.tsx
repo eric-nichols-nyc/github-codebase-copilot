@@ -6,14 +6,20 @@ import { RepoCard } from "./repo-card";
 
 type ProjectsListProps = {
   readonly projects: readonly ProjectSelectRow[];
-  /** When set, each row links to `/repos/{id}` and the active id is highlighted. */
+  /** When set, each row links to `{reposBasePath}/{id}` and the active id is highlighted. */
   readonly activeRepoId?: string;
+  /** Default `/repos`. Use `/admin/repos` on admin repo pages. */
+  readonly reposBasePath?: "/repos" | "/admin/repos";
 };
 
 export function ProjectsList({
   projects: rows,
   activeRepoId,
+  reposBasePath = "/repos",
 }: ProjectsListProps) {
+  const base = reposBasePath.endsWith("/")
+    ? reposBasePath.slice(0, -1)
+    : reposBasePath;
   if (rows.length === 0) {
     return (
       <p className="rounded-lg border border-dashed bg-muted/30 px-4 py-8 text-center text-muted-foreground text-sm">
@@ -39,7 +45,7 @@ export function ProjectsList({
                 "block rounded-lg outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-ring",
                 isActive ? "ring-2 ring-ring" : null
               )}
-              href={`/repos/${p.id}`}
+              href={`${base}/${p.id}`}
             >
               {card}
             </Link>

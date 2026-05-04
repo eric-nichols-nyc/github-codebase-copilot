@@ -64,9 +64,14 @@ async function loadGithubRepos(): Promise<
 export type AddRepoFormProps = {
   /** Called after a project is saved successfully (e.g. to close a dialog). */
   onImportSuccess?: () => void;
+  /** Where to navigate after import. Default `/repos`. */
+  reposDetailBase?: "/repos" | "/admin/repos";
 };
 
-export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
+export function AddRepoForm({
+  onImportSuccess,
+  reposDetailBase = "/repos",
+}: AddRepoFormProps = {}) {
   const router = useRouter();
   const [repos, setRepos] = useState<RepoOption[]>([]);
   const [reposLoading, setReposLoading] = useState(true);
@@ -123,7 +128,10 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
             description: `${parsed.githubOwner}/${parsed.githubRepo}`,
           });
           onImportSuccess?.();
-          router.push(`/repos/${data.project.id}`);
+          const base = reposDetailBase.endsWith("/")
+            ? reposDetailBase.slice(0, -1)
+            : reposDetailBase;
+          router.push(`${base}/${data.project.id}`);
         },
         onError: (error) => {
           const message =
@@ -132,7 +140,7 @@ export function AddRepoForm({ onImportSuccess }: AddRepoFormProps = {}) {
         },
       }
     );
-  }, [fileTreeRoot, importRepo, onImportSuccess, router, selected]);
+  }, [fileTreeRoot, importRepo, onImportSuccess, reposDetailBase, router, selected]);
 
   const noReposMessage =
     repos.length === 0 && !reposLoading ? "No repositories found." : null;

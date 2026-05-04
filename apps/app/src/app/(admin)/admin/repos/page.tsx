@@ -11,7 +11,7 @@ export default async function ReposIndexPage() {
     .from(projects)
     .orderBy(asc(projects.githubOwner), asc(projects.githubRepo));
 
-  const href = firstRepoDetailHref(projectRows);
+  const href = firstRepoDetailHref(projectRows, "/admin/repos");
   if (href !== null) {
     redirect(href);
   }

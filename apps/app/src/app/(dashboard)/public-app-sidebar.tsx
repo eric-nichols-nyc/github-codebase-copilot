@@ -1,5 +1,9 @@
 "use client";
 
+/**
+ * Sidebar for the **public / dashboard** app (`/repos`, `/settings`, …).
+ * For `/admin/*` routes use {@link AdminAppSidebar} (selected in `app-shell.tsx`).
+ */
 import {
   Sidebar,
   SidebarContent,
@@ -20,7 +24,7 @@ const nav = [
   { href: "/settings", label: "Settings", icon: Settings2 },
 ];
 
-export function AppSidebar() {
+export function PublicAppSidebar() {
   const pathname = usePathname();
 
   return (
@@ -37,6 +41,9 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
+        <p className="px-2 pt-1 pb-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
+          Public
+        </p>
         <SidebarGroup>
           <SidebarGroupLabel>Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -46,10 +53,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={
-                      pathname === href ||
-                      pathname.startsWith(`${href}/`) ||
-                      (href === "/repos" &&
-                        pathname.startsWith("/admin/repos"))
+                      pathname === href || pathname.startsWith(`${href}/`)
                     }
                     tooltip={label}
                   >

@@ -1,25 +1,28 @@
 "use client";
 
+/**
+ * Shared chrome for dashboard + admin. Sidebar variant:
+ * - URL includes `/admin` → {@link AdminAppSidebar}
+ * - otherwise → {@link PublicAppSidebar}
+ */
 import { DashboardLayout } from "@repo/design-system/components/layout";
 import { SidebarTrigger } from "@repo/design-system/components/ui/sidebar";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { AddRepoDialog } from "@/src/features/projects/components/add-repo-dialog";
 
-import { AppSidebar } from "./sidebar";
+import { AdminAppSidebar } from "./admin-app-sidebar";
+import { PublicAppSidebar } from "./public-app-sidebar";
 
 type AppShellProps = {
   readonly children: ReactNode;
-  /** Shown next to the sidebar trigger (e.g. "Admin" under `/admin`). */
-  readonly headerLabel?: string;
 };
 
-export function AppShell({
-  children,
-  headerLabel = "Dashboard",
-}: AppShellProps) {
+export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
-  const showAddRepoDialog = pathname.includes("/admin");
+  const isAdminRoute = pathname.includes("/admin");
+  const showAddRepoDialog = isAdminRoute;
+  const headerLabel = isAdminRoute ? "Admin" : "Dashboard";
 
   return (
     <DashboardLayout
@@ -37,7 +40,7 @@ export function AppShell({
           <div className="min-w-0" />
         </div>
       }
-      sidebar={<AppSidebar />}
+      sidebar={isAdminRoute ? <AdminAppSidebar /> : <PublicAppSidebar />}
     >
       {children}
     </DashboardLayout>

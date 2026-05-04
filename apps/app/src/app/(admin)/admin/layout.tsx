@@ -15,5 +15,5 @@ export default async function AdminLayout({
     redirect("/auth/sign-in");
   }
 
-  return <AppShell headerLabel="Admin">{children}</AppShell>;
+  return <AppShell>{children}</AppShell>;
 }

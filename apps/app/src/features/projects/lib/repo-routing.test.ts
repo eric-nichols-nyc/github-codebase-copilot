@@ -12,4 +12,10 @@ describe("firstRepoDetailHref", () => {
       firstRepoDetailHref([{ id: "a" }, { id: "b" }])
     ).toBe("/repos/a");
   });
+
+  it("returns /admin/repos/{id} when base is admin", () => {
+    expect(firstRepoDetailHref([{ id: "x" }], "/admin/repos")).toBe(
+      "/admin/repos/x"
+    );
+  });
 });

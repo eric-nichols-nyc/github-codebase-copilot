@@ -45,7 +45,11 @@ export function AddRepoDialog() {
             Choose a GitHub repository to add to your projects.
           </DialogDescription>
         </DialogHeader>
-        <AddRepoForm key={formKey} onImportSuccess={handleSuccess} />
+        <AddRepoForm
+          key={formKey}
+          onImportSuccess={handleSuccess}
+          reposDetailBase="/admin/repos"
+        />
       </DialogContent>
     </Dialog>
   );

@@ -4,6 +4,6 @@ type PageProps = {
   readonly params: Promise<{ id: string }>;
 };
 
-export default function RepoDetailPage(props: PageProps) {
-  return <RepoDetailRootPage {...props} reposBasePath="/repos" />;
+export default function AdminRepoDetailPage(props: PageProps) {
+  return <RepoDetailRootPage {...props} reposBasePath="/admin/repos" />;
 }
