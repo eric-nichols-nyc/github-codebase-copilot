@@ -12,7 +12,7 @@
     "@arcjet/decorate": "1.1.0",
     "@arcjet/env": "1.1.0",
     "@arcjet/ip": "1.1.0",
-    "@arcjet/next": "1.1.0",
+    "@arcjet/next": "1.4.0",
     "@fontsource-variable/figtree": "5.2.10",
     "@fontsource/ibm-plex-mono": "5.2.7",
     "@hookform/resolvers": "5.2.2",
