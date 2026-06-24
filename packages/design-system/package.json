@@ -22,7 +22,7 @@
     "@radix-ui/react-use-controllable-state": "^1.2.2",
     "@repo/auth": "workspace:*",
     "@repo/observability": "workspace:*",
-    "@xyflow/react": "^12.10.0",
+    "@xyflow/react": "^12.10.2",
     "ai": "^5.0.107",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
